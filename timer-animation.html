@@ -34,8 +34,10 @@
 <div>
     <div class="opt">
         <button onclick="starting()">开始</button>
-        《》
-        <input type="number">
+        <label for="delay" title="111">&emsp;延续时间</label>
+        <input id="delay" value="12800" type="number">
+        <label for="length" title="111">&emsp;平移距离</label>
+        <input id="length" value="800" type="number">
     </div>
     <div class="box" id="timeout">Timeout</div>
     <div class="box" id="interval">Interval</div>
@@ -44,6 +46,8 @@
 </body>
 <script>
     // 16*800=12800毫秒内x轴方向移动800个像素，16毫秒一帧，每帧移动1个像素
+    let delay = 12800
+    let length = 800
     const $to = document.getElementById('timeout')
     function myInterval(fn, t) {
         let timer = null
@@ -70,14 +74,14 @@
     function toMove() {
         countTo++
         $to.style.transform = 'translateX(' + countTo + 'px)'
-        if (countTo >= 800 && myIv) {
+        if (countTo >= length && myIv) {
             myIv.cancel()
         }
     }
     function startTo() {
         countTo = 0
         if (myIv && myIv.restart) { myIv.restart() }
-        myIv = myInterval(toMove, 16)
+        myIv = myInterval(toMove, delay / length)
     }
 
     const $iv = document.getElementById('interval')
@@ -91,10 +95,10 @@
         ivId = window.setInterval(() => {
             countIv++
             $iv.style.transform = 'translateX(' + countIv + 'px)'
-            if (countIv >= 800) {
+            if (countIv >= length) {
                 window.clearInterval(ivId)
             }
-        }, 16)
+        }, delay / length)
     }
 
 
@@ -107,12 +111,12 @@
         const elapsed = timestamp - start
 
         if (previousTimeStamp !== timestamp) {
-            const count = Math.min(0.0625 * elapsed, 800)
+            const count = Math.min(length / delay * elapsed, length)
             $af.style.transform = 'translateX(' + count + 'px)'
-            if (count === 200) done = true
+            if (count === length) done = true
         }
 
-        if (elapsed < 12800) {
+        if (elapsed < delay) {
             previousTimeStamp = timestamp
             if (!done) {
                 afId = window.requestAnimationFrame(step)
@@ -126,7 +130,19 @@
         if (afId) { window.cancelAnimationFrame(afId) }
         afId = window.requestAnimationFrame(step)
     }
+    function getInput() {
+        delay = document.getElementById('delay').value ?? 12800
+        length = document.getElementById('length').value ?? 800
+        if (typeof delay === 'string') {
+            delay = Number(delay)
+        }
+        if (typeof length === 'string') {
+            length = Number(length)
+        }
+        console.log(1111, delay, length);
+    }
     function starting() {
+        getInput()
         startTo()
         startIv()
         startAf()
