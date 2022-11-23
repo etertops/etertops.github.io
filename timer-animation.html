@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .opt {
+            display: flex;
+            flex-flow: row wrap;
+            align-items: center;
+        }
+        .box {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100px;
+            height: 100px;
+            margin-top: 32px;
+        }
+        #timeout {
+            background: red;
+        }
+        #interval {
+            background: red;
+        }
+        #animationFrame {
+            background: red;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="opt">
+        <button onclick="starting()">开始</button>
+        《》
+        <input type="number">
+    </div>
+    <div class="box" id="timeout">Timeout</div>
+    <div class="box" id="interval">Interval</div>
+    <div class="box" id="animationFrame">Animation Frame</div>
+</div>
+</body>
+<script>
+    // 16*800=12800毫秒内x轴方向移动800个像素，16毫秒一帧，每帧移动1个像素
+    const $to = document.getElementById('timeout')
+    function myInterval(fn, t) {
+        let timer = null
+        let stop = false
+        function interval() {
+            fn()
+            timer = stop ? null : setTimeout(interval, t)
+        }
+        interval()
+        return {
+            cancel() {
+                stop = true
+                if (timer) clearTimeout(timer)
+            },
+            restart() {
+                stop = true
+                if (timer) clearTimeout(timer)
+                stop = false
+            }
+        }
+    }
+    let myIv = null
+    let countTo = 0
+    function toMove() {
+        countTo++
+        $to.style.transform = 'translateX(' + countTo + 'px)'
+        if (countTo >= 800 && myIv) {
+            myIv.cancel()
+        }
+    }
+    function startTo() {
+        countTo = 0
+        if (myIv && myIv.restart) { myIv.restart() }
+        myIv = myInterval(toMove, 16)
+    }
+
+    const $iv = document.getElementById('interval')
+    let ivId
+    function startIv() {
+        let countIv = 0
+        if (ivId) {
+            window.clearInterval(ivId)
+            ivId = undefined
+        }
+        ivId = window.setInterval(() => {
+            countIv++
+            $iv.style.transform = 'translateX(' + countIv + 'px)'
+            if (countIv >= 800) {
+                window.clearInterval(ivId)
+            }
+        }, 16)
+    }
+
+
+    const $af = document.getElementById('animationFrame')
+    let afId, start, previousTimeStamp, done = false
+    function step(timestamp) {
+        if (start === undefined) {
+            start = timestamp
+        }
+        const elapsed = timestamp - start
+
+        if (previousTimeStamp !== timestamp) {
+            const count = Math.min(0.0625 * elapsed, 800)
+            $af.style.transform = 'translateX(' + count + 'px)'
+            if (count === 200) done = true
+        }
+
+        if (elapsed < 12800) {
+            previousTimeStamp = timestamp
+            if (!done) {
+                afId = window.requestAnimationFrame(step)
+            }
+        }
+    }
+    function startAf() {
+        done = false
+        start = undefined
+        previousTimeStamp = undefined
+        if (afId) { window.cancelAnimationFrame(afId) }
+        afId = window.requestAnimationFrame(step)
+    }
+    function starting() {
+        startTo()
+        startIv()
+        startAf()
+    }
+
+</script>
+</html>
